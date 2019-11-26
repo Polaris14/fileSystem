@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html class="x-admin-sm" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>主页</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" />
+    <link rel="stylesheet" th:href="@{/css/font.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/xadmin.css}">
+    <link rel="stylesheet" th:href="@{/lib/layui/css/layui.css}">
+    <script type="text/javascript" th:src="@{/webjars/jquery/3.4.1/jquery.js}"></script>
+    <script th:src="@{/lib/layui/layui.js}" charset="utf-8"></script>
+    <script type="text/javascript" th:src="@{/js/xadmin.js}"></script>
+</head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .top {
+            position: sticky;
+            position: -webkit-sticky;
+            top: 0px;
+        }
+    </style>
+</head>
+<body>
+<div class="top" style="z-index: 999;">
+    <ul class="layui-nav">
+        <li class="layui-nav-item">
+            <a href=""><img th:src="@{/images/user.jpg}" class="layui-nav-img">我</a>
+            <dl class="layui-nav-child">
+                <dd><a href="/log">登录日志</a></dd>
+                <dd><a href="/logout">退出</a></dd>
+            </dl>
+        </li>
+    </ul>
+    <div class="x-nav">
+          <span class="layui-breadcrumb">
+            <a th:href="'navigation?index=' + ${indexs.index}" th:each="navigation,indexs : ${navigations}" th:text="${navigation}"></a>
+          </span>
+    </div>
+    <div class="x-nav" id="btn">
+        <button type="button" 	class="layui-btn layui-btn-radius layui-btn-normal" onclick="xadmin.open('新建文件夹','/file/new',300,150)">新建文件夹</button>
+    </div>
+</div>
+<div class="flex-container">
+
+    <!--文件夹-->
+    <div th:each="folder : ${folders}" class="flex-item">
+        <div class="image-point">
+            <img th:src="@{/images/folder.png}" class="image-size">
+        </div>
+        <div style="text-align: center;margin-top: 20px" th:text="${folder}"></div>
+    </div>
+
+    <!--视频-->
+    <div th:each="video : ${videos}" class="flex-item">
+        <div class="image-point">
+            <img th:src="@{/images/video.png}" class="image-size">
+        </div>
+        <div style="text-align: center;margin-top: 20px"><span th:text="${video}"></span></div>
+    </div>
+
+    <!--视频-->
+    <div th:each="music : ${musics}" class="flex-item">
+        <div class="image-point">
+            <img th:src="@{/images/music.png}" class="image-size">
+        </div>
+        <div style="text-align: center;margin-top: 20px"><span th:text="${music}"></span></div>
+    </div>
+
+    <!--图片-->
+    <div th:each="image : ${images}" class="flex-item">
+        <div class="image-point">
+            <img th:src="@{/images/img.png}" class="image-size">
+        </div>
+        <div style="text-align: center;margin-top: 20px"><span th:text="${image}"></span></div>
+    </div>
+
+    <!--文档-->
+    <div th:each="document : ${documents}" class="flex-item">
+        <div class="image-point">
+            <img th:src="@{/images/document.png}" class="image-size">
+        </div>
+        <div style="text-align: center;margin-top: 20px"><span th:text="${document}"></span></div>
+    </div>
+
+    <!--上传-->
+    <label for="test3">
+        <div style="width: 150px;height: 160px;margin: 10px;">
+            <div class="image-point"><img style="margin-top: 10px;" th:src="@{/images/upload.png}" class="image-size"></div>
+        </div>
+
+        <div style="width: 70%;margin: -40px auto 0px auto;" class="layui-progress layui-progress-big" lay-filter="demo" lay-showpercent="true">
+            <div class="layui-progress-bar" lay-percent="0%"></div>
+        </div>
+
+    </label>
+    <button style="display: none" type="button" id="test3"></button>
+</div>
+</body>
+<script>
+    $(function(){
+        $(".flex-item").each(function(){
+            $(this).click(function () {
+                $(".flex-item").css("background-color","");
+                $(this).css({"background-color":"#93D1FF"});
+                var data = $(this).children("div:last").text();
+                onDocumentClick(data);
+            })
+            $(this).dblclick(function () {
+                $(".flex-item").css("background-color","");
+                $(this).css({"background-color":"#93D1FF"});
+                var data = $(this).children("div:last").text();
+                onDocumenDblClick(data);
+            })
+        })
+
+        layui.use(['upload','element'], function() {
+            var $ = layui.jquery
+                , upload = layui.upload
+                ,element = layui.element;
+            upload.render({
+                elem: '#test3'
+                ,url: '/file/upload/'
+                ,progress: function(n){
+                    var percent = n + '%' //获取进度百分比
+                    element.progress('demo', percent); //可配合 layui 进度条元素使用
+                }
+                ,accept: 'file' //普通文件
+                ,done: function(res){
+                    console.log(res);
+                    if(res.code == 0){
+                        layer.msg("此文件在文件夹中已存在");
+                    }
+                    if(res.code == 1){
+                        location.reload();
+                    }
+                }
+                ,size:1024 * 200
+            });
+        })
+    })
+    var clickTimeId;
+    function onDocumentClick(data) {
+        clearTimeout(clickTimeId);
+        //执行延时
+        clickTimeId = setTimeout(function() {
+            //此处为单击事件要执行的代码
+            var str = '<button type="button" class="layui-btn layui-btn-radius layui-btn-normal" onclick="xadmin.open(\'新建文件夹\',\'/file/new\',300,150)">新建文件夹</button>';
+            str += '<button type="button" class="layui-btn layui-btn-radius layui-btn-normal" onclick="xadmin.open(\'更名\',\'/file/newName?name=' + data + '\',300,150)">更名</button>';
+            str += '<button type="button" class="layui-btn layui-btn-radius layui-btn-normal" onclick="download(\''+data+'\')">下载</button>';
+            str += '<button type="button" class="layui-btn layui-btn-radius layui-btn-normal" onclick="xadmin.open(\'移动\',\'/file/move?name=' + data + '\',500,500)">移动</button>';
+            str += '<button type="button" class="layui-btn layui-btn-radius layui-btn-normal" onclick="remove(\''+data+'\')">删除</button>';
+            $("#btn").html(str);
+            console.log("鼠标单击");
+        }, 250);
+    }
+
+    function onDocumenDblClick(data) {
+        // 取消上次延时未执行的方法
+        clearTimeout(clickTimeId);
+        var name = data.split(".");
+        if(name[1] == "" || name[1] == null){
+            location.href = "file/next?folder=" + data;
+        }else if(name[1] == "mp4"){
+            xadmin.open("" + data,"/file/video?name=" + data,359,305);
+        }else if(name[1] == "mp3"){
+            xadmin.open("" + data,"/file/video?name=" + data,310,250);
+        }else if(name[1] == "txt"){
+            xadmin.open("" + data,"/file/text?name=" + data,400,400);
+        }else if(name[1] == "jpg" || name[1] == "png"){
+            xadmin.open("" + data,"/file/video?name=" + data,359,305);
+        }else{
+            layer.msg("暂不支持此格式在线打开");
+        }
+    }
+
+    function remove(data){
+        location.href="/file/remove?name=" + data;
+    }
+
+    function download(data){
+        location.href="/file/download?name=" + data;
+    }
+</script>
+</html>

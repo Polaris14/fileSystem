@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<meta charset="utf-8" />
+		<title>多级动态加载菜单演示</title>
+		<link href="http://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+		<script type="text/javascript" th:src="@{/webjars/jquery/3.4.1/jquery.js}"></script>
+		<script th:src="@{/lib/layui/layui.js}" charset="utf-8"></script>
+		<script type="text/javascript" th:src="@{/js/xadmin.js}"></script>
+		<style type="text/css">
+			*{
+				font-family: 微软雅黑;
+			}
+			.a{
+				width: 80%;
+				border: 2px dashed #666;
+				margin: 0 auto;
+			}
+			h2{
+				width: 80%;
+				margin: 0 auto;
+				padding: 20px;
+			}
+			.pre{
+				width: 80%;
+				margin: 0 auto;
+				border: 1px solid #ddd;
+				color: #000;
+				padding: 10px;
+				border-radius: 10px;
+				font-size: 15px;
+			}
+			button{
+				color: white;
+				background-color: #1E9FFF;
+				height: 30px;
+				width: 70px;
+				border-radius: 15px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="a" id="toUl">
+		</div>
+		<div class="pre">
+			<span id="url"></span><button>确定</button>
+		</div>
+		<form>
+			<input type="hidden">
+		</form>
+	</body>
+	<script type="text/javascript" th:src="@{/js/LuTree.js}" ></script>
+	<script type="text/javascript">
+		$(function(){
+			$.ajax({
+				url:"/file/getData",
+				type:"get",
+				success:function(data){
+					console.log(data);
+					//无限级菜单生成
+					$("#toUl").LuTree({
+						arr: data,
+						sign:true,
+						simIcon: "fa fa-file-o",//叶子图标
+						mouIconOpen: " fa fa-folder-open",//展开图标
+						mouIconClose:"fa fa-folder",//关闭图标
+						callback: function(id) {
+							var arr = id.split("/");
+							var str = "/";
+							for(var i = 5;i < arr.length;i++){
+								if(i == (arr.length-1)){
+									str += arr[i];
+									break;
+								}
+								str += arr[i] + "/";
+							}
+							$("#url").text("移动至：" + str);
+							$("input").val(id);
+						}
+					});
+				}
+			})
+
+			layui.use('form', function(){
+				var form = layui.form;
+				//监听提交
+				$("button").click(function(){
+					var val = $("input").val();
+					if(val == "" || val == null){
+						alert("请选择路径");
+					}else{
+						$.ajax({
+							url:"/file/renameTo",
+							data:val,
+							contentType: "application/json",
+							type:"post",
+							success:function(res){
+								if(res.code == 1){
+									xadmin.father_reload();
+									xadmin.close();
+								}else{
+									alert("此目录下有同名文件或文件夹");
+								}
+							}
+						})
+					}
+				})
+			});
+		})
+	</script>
+
+</html>
